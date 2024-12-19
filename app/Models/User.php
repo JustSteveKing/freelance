@@ -1,48 +1,64 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Identity\Provider;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+final class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory;
+    use HasUlids;
+    use Notifiable;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $fillable = [
         'name',
+        'handle',
         'email',
-        'password',
+        'avatar',
+        'provider',
+        'provider_id',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'provider_id',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    /** @return HasMany<Testimonial,User> */
+    public function testimonials(): HasMany
+    {
+        return $this->hasMany(
+            related: Testimonial::class,
+            foreignKey: 'user_id',
+        );
+    }
+
+    /** @return HasMany<TestimonialRequest,User> */
+    public function testimonialRequests(): HasMany
+    {
+        return $this->hasMany(
+            related: TestimonialRequest::class,
+            foreignKey: 'user_id',
+        );
+    }
+
+    /** @return array<string,class-string> */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'provider' => Provider::class,
         ];
     }
 }
